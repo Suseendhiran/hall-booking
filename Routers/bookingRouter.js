@@ -23,8 +23,6 @@ router.route("/createbooking").post(async (req, res) => {
       { _id: ObjectId(req.body.roomId) },
       { projection: { bookingsInfo: 1, roomName: 1, _id: 0 } }
     );
-  //bookingDetails.roomName = roomName;
-  console.log("bookingsinfos", bookingsInfo, roomName);
 
   //to value should be ahead of from
   if (moment(from).isAfter(moment(to))) {
@@ -44,12 +42,14 @@ router.route("/createbooking").post(async (req, res) => {
     res.send({ message: "Date should not be past date" });
     return;
   }
+  //create booking record in bookings collection
   const createBooking = async () => {
     const insertBooking = await client
       .db("hallbooking")
       .collection("bookings")
       .insertOne(bookingDetails);
-    console.log("insert", insertBooking);
+
+    //add booking info to rooms collecction
     const insertDate = await client
       .db("hallbooking")
       .collection("rooms")
@@ -77,7 +77,7 @@ router.route("/createbooking").post(async (req, res) => {
     createBooking();
     return;
   }
-  //check availabilities by comparing previous bookings of room, returns true if available
+  //check availabilities by comparing  bookings of room, returns true if available
   const available = bookingsInfo.every((booking) => {
     return (
       !moment(from).isSame(booking.from) || !moment(from).isBefore(booking.to)
@@ -85,7 +85,6 @@ router.route("/createbooking").post(async (req, res) => {
   });
 
   if (available) {
-    console.log("available");
     createBooking();
     return;
   } else {
